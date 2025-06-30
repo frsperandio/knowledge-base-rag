@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# Environment variable files
+.env
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Pytest and test cache
+.cache/
+.pytest_cache/
+
+# VSCode settings
+.vscode/
+
+# macOS and Linux files
+.DS_Store
+Thumbs.db
+
+# Logs and debugging
+*.log
+
+# Compiled Cython files
+*.so
+
+# Python egg metadata
+*.egg-info/
+dist/
+build/
+
+# Gradio uploads and temporary files
+gradio_cached_examples/
+gradio/  # if temporary folders are generated

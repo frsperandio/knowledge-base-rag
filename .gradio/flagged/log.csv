@@ -1,0 +1,4 @@
+conversation,index,value,flag,timestamp
+"[{""role"": ""user"", ""metadata"": null, ""content"": ""sddsds"", ""options"": null}, {""role"": ""assistant"", ""metadata"": null, ""content"": ""I don't know."", ""options"": null}]",1,Like,2025-06-29 16:21:59.580757
+"[{""role"": ""user"", ""metadata"": null, ""content"": ""sddsds"", ""options"": null}, {""role"": ""assistant"", ""metadata"": null, ""content"": ""I don't know."", ""options"": null}]",1,Spam,2025-06-29 16:22:02.033748
+"[{""role"": ""user"", ""metadata"": null, ""content"": ""sddsds"", ""options"": null}, {""role"": ""assistant"", ""metadata"": null, ""content"": ""I don't know."", ""options"": null}]",1,Like,2025-06-29 16:22:03.065312
