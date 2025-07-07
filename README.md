@@ -15,24 +15,28 @@ This project is a corporate document assistant that uses Retrieval-Augmented Gen
 
 ---
 
-## ✅ Interface Preview
-
-![Interface Preview](assets/interface-preview.png)
-
----
-
 ## 📂 Folder Structure
 
 ```
 .
-├── knowledge-base/           # Folder for storing uploaded documents
+├── assets/                   # App assets (images, etc.)
+│   └── interface-preview.png
+├── docker-compose.yml        # Docker Compose config
+├── Dockerfile                # Docker build file
 ├── main.py                   # Main application script
-├── .env                      # Environment variables (not tracked)
-├── .env.example              # Template for environment config
+├── rag_pipeline/             # RAG pipeline code
+│   ├── pipeline.py
+│   └── __pycache__/
+├── utils/                    # Utility functions
+│   ├── file_utils.py
+│   └── __pycache__/
+├── uploads/                  # Uploaded documents (user files)
+├── tmp/                      # Temporary files
 ├── requirements.txt          # Python dependencies
-└── README.md                 # This file
+├── README.md                 # This file
+├── chat_examples.txt         # Example chat prompts
+└── knowledge-base/           # (Legacy/unused) document storage
 ```
-
 ---
 
 ## ⚙️ Requirements
@@ -79,14 +83,17 @@ This will open the app in your default web browser with two tabs:
 
 ---
 
+
 ## 🖼️ Interface Preview
 
-- Upload documents in the **File Explorer** tab
-- Switch to **Chat** to ask questions like:
+- Upload documents using the file upload area on the main page
+- Ask questions directly in the chat area, such as:
   - “What is the vacation policy?”
   - “What is the deadline for reimbursement?”
   - “What are the promotion criteria?”
   - “What happens if I delay a financial report?”
+
+![Interface Preview](assets/interface-preview.png)
 
 ---
 
