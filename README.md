@@ -15,6 +15,12 @@ This project is a corporate document assistant that uses Retrieval-Augmented Gen
 
 ---
 
+## ✅ Interface Preview
+
+![Interface Preview](assets/interface-preview.png)
+
+---
+
 ## 📂 Folder Structure
 
 ```
@@ -53,8 +59,17 @@ OPENAI_API_KEY=your-openai-api-key-here
 
 ## 🚀 How to Run
 
+### Local
 ```bash
+conda create --name venv python=3.11
+conda activate venv
+pip install -r requirements.txt
 python main.py
+```
+
+### Docker
+```bash
+docker compose up --build
 ```
 
 This will open the app in your default web browser with two tabs:

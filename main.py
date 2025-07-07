@@ -1,128 +1,55 @@
-# ======================================
-# Imports
-# ======================================
+
+# Standard library imports
 import os
-import glob
-import shutil
-from dotenv import load_dotenv
 import gradio as gr
 
-from langchain_community.document_loaders import (
-    UnstructuredPDFLoader,
-    UnstructuredHTMLLoader,
-    UnstructuredWordDocumentLoader
-)
-from langchain.document_loaders import DirectoryLoader, TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.schema import Document
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.vectorstores import FAISS
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
+# Import your RAG pipeline builder
+from rag_pipeline.pipeline import build_rag_pipeline
+from utils.file_utils import handle_upload, delete_files, process_file, update_file_explorer, update_file_explorer_2
 
-# ======================================
-# Environment Setup and API Key
-# ======================================
-MODEL = "gpt-4o-mini"
-db_name = "vector_db"
+# Directory where uploaded files are stored
+file_root = "uploads"
+# Temporary directory for file explorer (if needed)
+file_root_tmp = "tmp"
 
-load_dotenv(override=True)
-openai_api_key = os.getenv('OPENAI_API_KEY')
+# Initialize the RAG pipeline with the uploads folder
+conversation_chain = build_rag_pipeline(folder_path=file_root)
 
-if openai_api_key:
-    print(f"OpenAI API Key exists and begins {openai_api_key[:8]}")
-else:
-    print("OpenAI API Key not set")
-
-# ======================================
-# Load Documents from Folder
-# ======================================
-documents = []
-folder_path = "knowledge-base"
-
-file_loaders = {
-    ".pdf": UnstructuredPDFLoader,
-    ".html": UnstructuredHTMLLoader,
-    ".htm": UnstructuredHTMLLoader,
-    ".docx": UnstructuredWordDocumentLoader
-}
-
-file_paths = glob.glob(f"{folder_path}/**/*.*", recursive=True)
-
-for file_path in file_paths:
-    ext = os.path.splitext(file_path)[1].lower()
-    loader_cls = file_loaders.get(ext)
-    if loader_cls:
-        try:
-            loader = loader_cls(file_path)
-            docs = loader.load()
-            for doc in docs:
-                doc.metadata["source"] = file_path
-                doc.metadata["doc_type"] = ext
-                documents.append(doc)
-        except Exception as e:
-            print(f"Error loading {file_path}: {e}")
-
-# ======================================
-# Split Documents into Chunks
-# ======================================
-text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-chunks = text_splitter.split_documents(documents)
-
-# ======================================
-# Build Vector Store
-# ======================================
-embeddings = OpenAIEmbeddings()
-vectorstore = FAISS.from_documents(chunks, embedding=embeddings)
-
-# ======================================
-# Setup LLM and Conversation Chain
-# ======================================
-llm = ChatOpenAI(temperature=0.7, model_name=MODEL)
-retriever = vectorstore.as_retriever()
-memory = ConversationBufferMemory(memory_key='chat_history', return_messages=True)
-
-conversation_chain = ConversationalRetrievalChain.from_llm(
-    llm=llm,
-    retriever=retriever,
-    memory=memory
-)
-
-# ======================================
-# Chat Handler Function
-# ======================================
+# Chat function: handles user messages and returns answers from the RAG pipeline
 def chat(message, history):
     result = conversation_chain.invoke({"question": message})
     return result["answer"]
 
-# ======================================
-# File Upload and Processing
-# ======================================
-def process_file(file):
-    try:
-        print(f"file: {file}")
-        file_name = os.path.basename(file)
-        save_dir = "./knowledge-base"
-        os.makedirs(save_dir, exist_ok=True)
-        destination = os.path.join(save_dir, file_name)
-        print(f"destination: {destination}")
-        shutil.copy(file.name, destination)
-        gr.update()
-        return f"File uploaded and saved to: {destination}"
-    except Exception as e:
-        return f"Error!: {str(e)}"
+# Load chat examples from a text file for the ChatInterface
+examples_path = os.path.join(os.path.dirname(__file__), "chat_examples.txt")
+with open(examples_path, "r", encoding="utf-8") as f:
+    chat_examples = [line.strip() for line in f if line.strip()]
 
-# ======================================
-# Gradio Interface (Chat + File Explorer)
-# ======================================
-chat_interface = gr.ChatInterface(chat, type="messages")
+# Build the Gradio UI
+with gr.Blocks() as demo:
+    with gr.Row():
+        # Left column: Chat interface
+        with gr.Column(scale=2):
+            gr.Markdown("## Chat Interface")
+            chat_interface = gr.ChatInterface(chat, type="messages", examples=chat_examples)
+        # Right column: File explorer and file management
+        with gr.Column(scale=1):
+            gr.Markdown("## File Explorer")
+            file_explorer = gr.FileExplorer(label="File Explorer", root_dir=file_root, file_count="multiple")
+            selected_files = gr.Textbox(label="Selected file paths")
+            file_explorer.change(process_file, inputs=file_explorer, outputs=selected_files)
+            # Refresh button for file explorer
+            refresh_btn = gr.Button("Refresh")
+            refresh_btn.click(update_file_explorer, outputs=file_explorer).then(update_file_explorer_2, outputs=file_explorer)
+            # Delete selected files
+            delete_btn = gr.Button("Delete")
+            delete_out = gr.Textbox(label="Deleted files")
+            delete_btn.click(delete_files, inputs=selected_files, outputs=delete_out)
+            # File upload widget
+            file_upload = gr.File(label="File Upload")
+            upload_btn = gr.Button("Upload")
+            upload_out = gr.Textbox(label="File Upload Status")
+            upload_btn.click(handle_upload, inputs=[file_upload], outputs=[upload_out])
 
-with gr.Blocks() as explorer_interface:
-    file_explorer = gr.FileExplorer(root_dir="./knowledge-base")
-    file_input = gr.File(label="Click to Upload", file_types=[".txt", ".pdf", ".docx"])
-    output = gr.Textbox(label="Result")
-    upload_button = gr.Button("Submit File")
-    upload_button.click(fn=process_file, inputs=file_input, outputs=output)
-
-view = gr.TabbedInterface([chat_interface, explorer_interface], ["Chat", "File Explorer"])
-view.launch(inbrowser=True)
+# Launch the Gradio app
+demo.launch(server_name="0.0.0.0")
